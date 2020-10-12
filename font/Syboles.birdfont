@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<font>
+<format>3.20</format>
+<program version="4.7.18" os="windows" />
+
+<postscript_name>Typeface</postscript_name>
+<name>Typeface</name>
+<subfamily>Regular</subfamily>
+<bold>false</bold>
+<italic>false</italic>
+<full_name>Typeface</full_name>
+<unique_identifier>Typeface</unique_identifier>
+<version>Version 1.0</version>
+<description></description>
+<copyright>SIL Open Font License (OFL)</copyright>
+<license>SIL Open Font License (OFL)</license>
+<license_url>http://scripts.sil.org/OFL</license_url>
+<weight>400</weight>
+<units_per_em>1024</units_per_em>
+<trademark></trademark>
+<manufacturer></manufacturer>
+<designer></designer>
+<vendor_url></vendor_url>
+<vendor_id>Bird</vendor_id>
+<designer_url></designer_url>
+<underline_position>-10</underline_position>
+<underline_thickness>3.5</underline_thickness>
+<open_engraving>false</open_engraving>
+<same_way_back_engraving>false</same_way_back_engraving>
+
+<horizontal>
+	<top_limit>78</top_limit>
+	<top_position>72</top_position>
+	<x-height>56</x-height>
+	<base_line>0</base_line>
+	<bottom_position>-20</bottom_position>
+	<bottom_limit>-21</bottom_limit>
+	<line_gap>10</line_gap>
+</horizontal>
+
+<grid width="1"/>
+<grid width="2"/>
+<grid width="4"/>
+
+<background scale="1" />
+
+<base_filename>Typeface</base_filename>
+<base_filename_mac>Typeface Mac</base_filename_mac>
+<export_ttf_font>true</export_ttf_font>
+<export_otf_font>true</export_otf_font>
+<export_eot_font>false</export_eot_font>
+<export_svg_font>true</export_svg_font>
+<export_colr_table>true</export_colr_table>
+<export_svg_table>true</export_svg_table>
+<optimize_otf_for_size>false</optimize_otf_for_size>
+<optimize_otf_for_details>true</optimize_otf_for_details>
+
+<default_foreground_color></default_foreground_color>
+
+<collection unicode="U+21" svg="false" colr="false" auto_generate="false" meta_name="">
+	<selected id="1"/>
+	<glyph id="1" left="0" right="99.3">
+		<layer name="Layer" visible="true">
+			<path data="S 33.8,73.8 L 33.6,64.2 L 33.4,58.2 L 33.4,46.2 L 33.4,45.2 Q 28.3,37.3 27,35 L 25.4,32.6 L 21.8,27.6 Q 22.3,25.5 22.9,24.1 L 23.8,21.4 L 24.5,19.4 L 25,17.4 L 27,9.8 Q 25.2,7.9 23.9,6.7 L 16.8,0.2 L 39.5,0.2 Q 39.6,3.1 39.2,6.7 Q 38.7,9.9 38.2,12.2 L 36.9,16.6 Q 35.3,22.1 34.1,25.5 L 35,27 L 35.8,28.2 L 37.4,31 Q 40,36.4 41.8,39 L 43,39 L 44.6,39 L 51.4,39 L 52.6,39 L 57.4,39 L 59,36.1 L 61.5,32 Q 62.3,30.5 63.7,28.2 Q 65.3,25.6 66.6,23.4 Q 68.2,21.1 69,19.4 Q 69.8,8.6 64.4,5.1 L 64.4,1.8 L 72.6,1.8 L 75.8,1.8 L 85.2,1.8 Q 82.2,5.8 79.4,9.2 L 79.4,10.6 L 79.4,17.4 L 79.4,18.6 L 79.4,23.4 Q 78.4,25 76.8,27.8 L 75.1,30.4 L 73,34.2 L 71,37.4 L 69.8,39.4 Q 68,42.2 66.9,44.5 L 67.8,46.6 L 68.6,48.6 L 72.2,57.8 L 73.8,61.8 L 78.8,75.8 L 73.4,76.1 L 69.2,76.3 L 64.2,76.6 L 56.2,77 Q 52.4,77 41,77.8 L 34.1,78.3 L 33.8,73.8" />
+			<path data="S 42.6,74.6 L 47.8,74.2 L 56.6,73.8 L 64.2,73.4 L 74.2,73 L 72.9,68.9 L 69.5,59.9 D 66.8,53.2 64.8,47.4 63.4,44.3 Q 65.6,40.3 67.2,37.9 Q 69.7,34.1 70.6,32.6 Q 72.5,29.2 74.3,25.8 Q 74.7,24.5 76.6,21.8 L 76.6,15 Q 76.5,11.8 76.2,8.8 Q 77.8,6.6 78.6,5 L 74.4,5 L 69.4,5 Q 70.5,6.9 71.8,8.8 L 71.9,12 Q 72.1,16.5 72,20.1 L 70.9,22.4 L 69.8,24.2 L 68.2,26.9 L 66.6,29.4 L 64.6,33 L 62.6,36.6 Q 60.2,40.7 59.4,41.8 L 57.8,41.8 L 56.6,41.8 L 54.6,41.8 L 53.4,41.8 L 51.8,41.8 L 50.6,41.8 L 42.6,41.8 L 39.8,41.8 L 39,40.6 L 38.2,39.4 L 36.2,35.4 L 34.6,32.6 L 30.6,25.4 L 32.2,20.6 L 33.3,17 Q 35.8,7.4 35.7,3.2 Q 31.1,3.2 24.6,3.2 Q 28,6.2 30.5,8.8 L 30,11.3 Q 28.1,17.8 27.8,19.4 Q 26.4,23.6 25.1,27.3 L 26.2,28.6 L 27.4,30.2 L 30,34.4 L 31.3,36.3 L 33,39 Q 34.6,41.6 36.4,44.6 L 36.6,51.8 L 36.6,61.4 L 36.8,65.9 Q 37,71.3 37,75 L 42.6,74.6" />
+		</layer>
+	</glyph>
+</collection>
+
+</font>
