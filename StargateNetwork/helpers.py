@@ -31,19 +31,21 @@ def NumberToBase(n, b):
 
 def IpToStargateCode(ip):
     IntIP = ListNumbersToIntInBase(ip, 256)
-    ListGlyphes = NumberToBase(IntIP, 38)
-    while len(ListGlyphes) < 7:
-        ListGlyphes.insert(0, 0)
-    ListGlyphes.pop(0)
-    ListGlyphes.append(39)
-    return ListGlyphes
+    ListGlyphs = NumberToBase(IntIP, 38)
+    while len(ListGlyphs) < 7:
+        ListGlyphs.insert(0, 0)
+    ListGlyphs.pop(0)
+    ListGlyphs.append(39)
+    return ListGlyphs
 
 
 def StargateCodeToIp(sc):
     sc = sc[:-1]
-    maxintToShift = ListNumbersToIntInBase([38, 38, 38, 38, 38], 38)
+    maxintToShift = ListNumbersToIntInBase([1, 0, 0, 0, 0, 0], 38)
     actualint = ListNumbersToIntInBase(sc, 38)
-    sc.insert(0, 0 if (actualint <= maxintToShift) else 1)
+    sc.insert(0, 0 if (actualint < maxintToShift) else 1)
     IntIP = ListNumbersToIntInBase(sc, 38)
     ListIP = NumberToBase(IntIP, 256)
+    while len(ListIP) < 4:
+        ListIP.insert(0, 0)
     return ListIP
