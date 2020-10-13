@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import StargateNetwork.helpers as StargateNetworkUtils
+import StargateNetwork.Helpers as StargateNetworkUtils
 import tkinter as tk
 import pyglet
 import os
