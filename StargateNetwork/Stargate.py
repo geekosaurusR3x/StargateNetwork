@@ -1,4 +1,4 @@
-from . import StargateListenLoop, StargateSendLoop, Helpers
+from . import StargateListenLoop, StargateSendLoop, Helpers, EventHook
 
 
 class Stargate():
@@ -7,36 +7,50 @@ class Stargate():
         self.host = host
         self.port = port
         self.listenloop = StargateListenLoop.StargateListenLoop(
-            self.host, self.port)
+            self.host, self.port, self)
 
-        self.listenloop.configureConnection()
+        self.listenloop.onIncomingConnection += self.onIncomingConnection
+        self.listenloop.onIncomingConnected += self.onIncomingConnected
+        self.listenloop.onIncomingDisconnected += self.onIncomingDisconnected
         self.sendLoop = None
-        print(self.getAdressOnNetwork())
         self.powered = False
         self.connected = False
         self.ipConnectedTo = None
+        self.disablelisten = False
+        self.disablesend = False
 
         self.reservedSequences = {
             "39.39.39.39.39.39.39": "127.0.0.1"
         }
 
+        self.OnDialingConnection = EventHook.EventHook()
+        self.OnDialingConnected = EventHook.EventHook()
+        self.OnDialingDisconnection = EventHook.EventHook()
+        self.OnIncomingConnection = EventHook.EventHook()
+        self.OnIncomingConnected = EventHook.EventHook()
+        self.OnIncomingDisconnection = EventHook.EventHook()
+        self.otherSequence = None
+
     def __str__(self):
-        return f"Stargate {self.getAdressOnNetwork()} \r\n\t Power state : {self.powered}\r\n\t Connection status : {self.connected} to {self.ipConnectedTo}"
+        return f"Stargate { self.getAdressOnNetwork() if self.powered else None} \r\n\t Power state : {self.powered}\r\n\t Connection status : {self.connected} to {self.ipConnectedTo} \r\n\t Can Call : {not self.disablesend}\r\n\t Can Receve : {not self.disablelisten}"
 
     def powerOn(self):
         if(self.powered):
             return
 
         self.powered = True
-        print('Start listening for incoming traveler')
-        self.listenloop.start()
+        if not self.disablelisten:
+            print('Start listening for incoming traveler')
+            self.listenloop.configureConnection()
+            self.listenloop.start()
 
     def powerOff(self):
         if not self.powered:
             return
+        if not self.disablelisten:
+            print('Stop listening for incoming traveler')
+            self.listenloop.stop()
         self.powered = False
-        print('Stop listening for incoming traveler')
-        self.listenloop.stop()
 
     def getAdressOnNetwork(self):
         Ip = self.listenloop.getAddress()
@@ -44,10 +58,11 @@ class Stargate():
         return Helpers.IpToStargateCode(Ip)
 
     def dial(self, sequence):
-        if not self.powered and self.sendLoop is None:
+        if not self.powered or self.connected or self.sendLoop is not None:
             return
 
         # seach it in reserved sequences
+        self.otherSequence = sequence
         if(sequence in self.reservedSequences):
             ip = self.reservedSequences[sequence]
         else:
@@ -57,35 +72,63 @@ class Stargate():
 
         # creating the connection
         self.sendLoop = StargateSendLoop.StargateSendLoop()
-        self.sendLoop.onConnectionStart += lambda: print(
-            f"Connecting to {ip}")
-        self.ipConnectedTo = ip
-        self.sendLoop.onConnected += self.onConnected
-        self.sendLoop.onConnectionError += self.onConnectionError
-        self.sendLoop.onDisconnectionStart += lambda: print(
-            f"Disconnecting from {self.ipConnectedTo}")
-        self.sendLoop.onDisconnected += self.onDisconnected
+        self.sendLoop.onOutConnectionStart += self.onDialingStart
+        self.sendLoop.onOutConnected += self.onOutConnected
+        self.sendLoop.onOutConnectionError += self.onOutConnectionError
+        self.sendLoop.onOutDisconnected += self.onOutDisconnected
 
         self.sendLoop.dial(ip, self.port)
 
     def disconnect(self):
-        if self.sendLoop is not None:
-            self.sendLoop.stop()
-            self.sendLoop = None
-            self.connected = False
+        if not self.powered or not self.connected or self.sendLoop is None:
+            return
+
+        self.sendLoop.stop()
+        self.sendLoop = None
+        self.connected = False
 
     def resetConnectionInfo(self):
         self.ipConnectedTo = None
         self.connected = False
 
-    def onConnected(self):
-        print(f"Connected to {self.ipConnectedTo}")
-        self.connected = True
+    def onDialingStart(self, ip):
+        print(f"Connecting to {ip}")
+        self.OnDialingConnection.fire(self.otherSequence)
 
-    def onConnectionError(self):
+    def onOutConnected(self, ip):
+        self.ipConnectedTo = ip
+        self.connected = True
         print(f"Connected to {self.ipConnectedTo}")
+        self.OnDialingConnected.fire()
+
+    def onOutConnectionError(self):
+        print(f"Connection to {self.ipConnectedTo} failled")
         self.resetConnectionInfo()
 
-    def onDisconnected(self):
+    def onOutDisconnected(self):
         print(f"Disconnected to {self.ipConnectedTo}")
         self.resetConnectionInfo()
+        self.OnDialingDisconnection.fire()
+
+    def onIncomingConnection(self, ip):
+        print(f"Connection from {ip}")
+        if(ip in self.reservedSequences.values()):
+            sequence = list(self.reservedSequences.keys())[list(
+                self.reservedSequences.values()).index(ip)]
+        else:
+            ip = Helpers.SequenceToListInt(ip)
+            sequence = Helpers.IpToStargateCode(ip)
+            sequence = Helpers.ListIntToSequence(sequence)
+
+        self.OnIncomingConnection.fire(sequence)
+
+    def onIncomingConnected(self, ip):
+        self.connected = True
+        self.ipConnectedTo = ip
+        print(f"Connected from {self.ipConnectedTo}")
+        self.OnIncomingConnected.fire()
+
+    def onIncomingDisconnected(self):
+        print(f"Disconnected from {self.ipConnectedTo}")
+        self.resetConnectionInfo()
+        self.OnIncomingDisconnection.fire()

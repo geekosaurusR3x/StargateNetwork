@@ -9,19 +9,19 @@ class StargateSendLoop (Helpers.StargateThread):
     def __init__(self):
         super().__init__()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.onConnectionStart = EventHook.EventHook()
-        self.onConnected = EventHook.EventHook()
-        self.onConnectionError = EventHook.EventHook()
-        self.onDisconnectionStart = EventHook.EventHook()
-        self.onDisconnected = EventHook.EventHook()
+        self.onOutConnectionStart = EventHook.EventHook()
+        self.onOutConnected = EventHook.EventHook()
+        self.onOutConnectionError = EventHook.EventHook()
+        self.onOutDisconnected = EventHook.EventHook()
 
     def dial(self, host, port):
-        self.onConnectionStart.fire()
         try:
             self.socket.connect((host, port))
-            self.onConnected.fire()
+            self.onOutConnectionStart.fire(host)
+            self.onOutConnected.fire(host)
         except:
-            self.onConnectionError.fire()
+            self.onOutConnectionError.fire()
+        self.sendDatas("test")
 
     def realRun(self):
         try:
@@ -32,8 +32,18 @@ class StargateSendLoop (Helpers.StargateThread):
             print(e)
 
     def stop(self):
-        self.onDisconnectStart.fire()
-        self.socket.shutdown()
+        self.sendDatas("disconnect")
         self.socket.close()
         super().stop()
-        self.onDisconnected.fire()
+        self.onOutDisconnected.fire()
+
+    def sendDatas(self, datas):
+        bufferSize = 4096
+        totalsent = 0
+        sent = bufferSize
+        datas = datas.encode()
+        while sent == bufferSize:
+            sizeToSend = min(len(datas)-totalsent, bufferSize)
+            sent = self.socket.send(datas[totalsent:totalsent+sizeToSend])
+            if sent == bufferSize:
+                totalsent += bufferSize
