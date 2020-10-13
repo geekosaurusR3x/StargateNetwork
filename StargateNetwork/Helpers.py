@@ -1,4 +1,9 @@
+from abc import ABC, abstractmethod
+import threading
+import time
+
 # helpers for translate ip to stargate glyph
+
 
 def SequenceToListInt(s):
     lst = [int(item) for item in s.split('.')]
@@ -49,3 +54,24 @@ def StargateCodeToIp(sc):
     while len(ListIP) < 4:
         ListIP.insert(0, 0)
     return ListIP
+
+
+# helpers for threader into stargate
+class StargateThread(ABC, threading.Thread):
+    def __init__(self):
+        super().__init__()
+        threading.Thread.__init__(self)
+        self.loop = False
+
+    def run(self):
+        while self.loop:
+            self.realRun()
+            time.sleep(0.001)
+
+    @abstractmethod
+    def realRun(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        self.loop = False

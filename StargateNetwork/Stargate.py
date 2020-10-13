@@ -1,46 +1,50 @@
-from . import Helpers
-import socket
-import time
-import threading
+from . import StargateListenLoop, StargateSendLoop, Helpers
 
 
-class Stargate (threading.Thread):
+class Stargate():
+
     def __init__(self, host, port):
-        threading.Thread.__init__(self)
         self.host = host
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listenloop = StargateListenLoop.StargateListenLoop(
+            self.host, self.port)
 
-    def waitForConnection(self):
+        self.listenloop.configureConnection()
+        self.sendLoop = None
+        print('Connected to the network')
+        print(self.getAdressOnNetwork())
+        self.powered = False
 
-        self.socket.bind((self.host, self.port))
-        self.loop = True
-        self.socket.listen(1)
+    def powerOn(self):
+        if(self.powered):
+            return
+
+        self.powered = True
         print('Start listening for incoming traveler')
-        self.start()
+        self.listenloop.start()
 
-    def run(self):
-        while self.loop:
-            try:
-                c, addr = self.socket.accept()
-                print(f'Got connection from {addr}')
-
-                # send a thank you message to the client.
-                c.send('Thank you for connecting')
-
-                # Close the connection with the client
-                c.close()
-            except socket.timeout:
-                pass
-
-            time.sleep(0.01)
-
-    def stop(self):
-        self.loop = False
+    def powerOff(self):
+        if not self.powered:
+            return
+        self.powered = False
         print('Stop listening for incoming traveler')
+        self.listenloop.stop()
 
-    def getAdress(self):
-        Ip = socket.gethostbyname(socket.gethostname())
-        Ip = Helpers.SequenceToListInt(Ip)
+    def getAdressOnNetwork(self):
+        Ip = Helpers.SequenceToListInt(self.listenloop.getAddress())
         return Helpers.IpToStargateCode(Ip)
+
+    def dial(self, sequence):
+        if not self.powered and self.sendLoop is None:
+            return
+        sequence = Helpers.SequenceToListInt(sequence)
+        ip = Helpers.StargateCodeToIp(sequence)
+        ip = Helpers.ListIntToSequence(ip)
+        self.sendLoop = StargateSendLoop.StargateSendLoop()
+        print(f"connecting to {ip}")
+        self.sendLoop.dial(ip, self.port)
+
+    def disconnect(self):
+        if self.sendLoop is not None:
+            self.sendLoop.stop()
+            self.sendLoop = None
