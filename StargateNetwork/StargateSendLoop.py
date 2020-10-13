@@ -11,6 +11,7 @@ class StargateSendLoop (Helpers.StargateThread):
 
     def dial(self, host, port):
         self.socket.connect((host, port))
+        print("Connected to gate")
 
     def realRun(self):
         try:

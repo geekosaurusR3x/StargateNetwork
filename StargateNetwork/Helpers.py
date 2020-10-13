@@ -61,7 +61,7 @@ class StargateThread(ABC, threading.Thread):
     def __init__(self):
         super().__init__()
         threading.Thread.__init__(self)
-        self.loop = False
+        self.loop = True
 
     def run(self):
         while self.loop:

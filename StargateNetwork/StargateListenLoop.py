@@ -21,6 +21,7 @@ class StargateListenLoop (Helpers.StargateThread):
     def realRun(self):
         try:
             c, addr = self.socket.accept()
+            print(f"Incoming Traveler from {addr}")
         except io.BlockingIOError:
             pass
         except Exception as e:

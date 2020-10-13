@@ -7,6 +7,7 @@ if __name__ == "__main__":
     stargate = Stargate('', 6842)
 
     while choice != "Exit":
+        print(stargate)
         print("--------Menu-------")
         print("Power On")
         print("Power Off")
