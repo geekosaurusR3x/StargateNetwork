@@ -9,20 +9,24 @@ class StargateMenu():
 
     def __init__(self, stargate):
         self.stargate = stargate
-        self.stargate.OnDialingConnection += self.DialDisplayThread
-        self.stargate.OnIncomingConnection += self.IncomingDisplayThread
 
-        self.stargate.OnDialingConnected += self.OpenVortexDisplay
-        self.stargate.OnIncomingConnected += self.OpenVortexDisplay
+        self.stargate.onDialingConnection += self.dialDisplayThread
+        self.stargate.onIncomingConnection += self.incomingDisplayThread
 
-        self.stargate.OnDialingDisconnection += self.CloseVortexDisplay
-        self.stargate.OnIncomingDisconnection += self.CloseVortexDisplay
+        self.stargate.onDialingConnected += self.openVortexDisplay
+        self.stargate.onIncomingConnected += self.openVortexDisplay
 
-    def DialDisplayThread(self, sequence, callback):
+        self.stargate.onDialingDisconnection += self.closeVortexDisplay
+        self.stargate.onIncomingDisconnection += self.closeVortexDisplay
+
+        self.stargate.onIncomingDataText += self.displayReceivedText
+        self.stargate.onIncomingDataFile += self.displayReceivedFile
+
+    def dialDisplayThread(self, sequence, callback):
         start_new_thread(self.SequenceDisplay,
                          ("Dialing sequence : ", sequence, callback))
 
-    def IncomingDisplayThread(self, sequence, callback):
+    def incomingDisplayThread(self, sequence, callback):
         os.system('cls' if os.name == 'nt' else 'clear')
         start_new_thread(self.SequenceDisplay,
                          ("Incoming travelers from : ", sequence, callback, False))
@@ -48,11 +52,21 @@ class StargateMenu():
         print("")
         callback()
 
-    def OpenVortexDisplay(self):
+    def openVortexDisplay(self):
         print("Vortex created")
 
-    def CloseVortexDisplay(self):
+    def closeVortexDisplay(self):
         print("Vortex destroyed")
+
+    def displayReceivedFile(self, fileName):
+        fileSize = os.path.getsize(fileName)
+        print("File receive :")
+        print("\t Name : {fileName}")
+        print("\t Size : {fileSize}")
+
+    def displayReceivedText(self, msg):
+        print("Message received : ")
+        print("\t"+msg)
 
     def MenuLoop(self):
         choice = ""
@@ -64,7 +78,8 @@ class StargateMenu():
                 if not self.stargate.disablesend and not self.stargate.connected:
                     print("Dial")
                 if not self.stargate.disablesend and self.stargate.connected:
-                    print("Send Data")
+                    print("Send Text")
+                    print("Send File")
                     print("Disconnect")
                 print("Power Off")
             else:
@@ -87,8 +102,16 @@ class StargateMenu():
                 self.stargate.dial(sequence)
                 while not self.stargate.connected:
                     time.sleep(0.001)
+            if(choice == "Send Text" and not self.stargate.disablesend and self.stargate.powered):
+                msg = input("What to send : ")
+                self.stargate.sendDataText(msg)
+            if(choice == "Send File" and not self.stargate.disablesend and self.stargate.powered):
+                file = input("File to send (absolute path): ")
+                self.stargate.sendDataFile(file)
             if(choice == "Disconnect" and not self.stargate.disablesend and self.stargate.powered):
                 self.stargate.disconnect()
+                while self.stargate.connected:
+                    time.sleep(0.001)
         stargate.powerOff()
 
     def displayDHD(self):

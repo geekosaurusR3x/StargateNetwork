@@ -1,4 +1,7 @@
 from . import StargateListenLoop, StargateSendLoop, Helpers, EventHook
+import base64
+import os
+import tempfile
 
 
 class Stargate():
@@ -19,12 +22,15 @@ class Stargate():
             "38.38.38.38.38.38.38": "127.0.0.1"
         }
 
-        self.OnDialingConnection = EventHook.EventHook()
-        self.OnDialingConnected = EventHook.EventHook()
-        self.OnDialingDisconnection = EventHook.EventHook()
-        self.OnIncomingConnection = EventHook.EventHook()
-        self.OnIncomingConnected = EventHook.EventHook()
-        self.OnIncomingDisconnection = EventHook.EventHook()
+        self.onDialingConnection = EventHook.EventHook()
+        self.onDialingConnected = EventHook.EventHook()
+        self.onDialingDisconnection = EventHook.EventHook()
+        self.onIncomingConnection = EventHook.EventHook()
+        self.onIncomingConnected = EventHook.EventHook()
+        self.onIncomingDisconnection = EventHook.EventHook()
+        self.onIncomingDataText = EventHook.EventHook()
+        self.onIncomingDataFile = EventHook.EventHook()
+
         self.otherSequence = None
         self.dialFinish = False
 
@@ -36,20 +42,21 @@ class Stargate():
             return
         self.powered = True
         if not self.disablelisten:
-            print('Start listening for incoming traveler')
             self.listenloop = StargateListenLoop.StargateListenLoop(
                 self.host, self.port, self)
-            self.listenloop.onIncomingConnection += self.onIncomingConnection
-            self.listenloop.onIncomingConnected += self.onIncomingConnected
-            self.listenloop.onIncomingDisconnected += self.onIncomingDisconnected
+            self.listenloop.onIncomingConnection += self.incomingConnection
+            self.listenloop.onIncomingConnected += self.incomingConnected
+            self.listenloop.onIncomingDisconnected += self.incomingDisconnected
             self.listenloop.configureConnection()
             self.listenloop.start()
 
     def powerOff(self):
         if not self.powered:
             return
-        if not self.disablelisten:
+        if not self.disablelisten and self.listenloop is not None:
             self.listenloop.stop()
+        if not self.disablesend and self.sendLoop is not None:
+            self.sendLoop.stop()
         self.powered = False
 
     def getAdressOnNetwork(self):
@@ -73,10 +80,10 @@ class Stargate():
 
         # creating the connection
         self.sendLoop = StargateSendLoop.StargateSendLoop(self)
-        self.sendLoop.onOutConnectionStart += self.onDialingStart
-        self.sendLoop.onOutConnected += self.onOutConnected
-        self.sendLoop.onOutConnectionError += self.onOutConnectionError
-        self.sendLoop.onOutDisconnected += self.onOutDisconnected
+        self.sendLoop.onOutConnectionStart += self.dialingStart
+        self.sendLoop.onOutConnected += self.outConnected
+        self.sendLoop.onOutConnectionError += self.outConnectionError
+        self.sendLoop.onOutDisconnected += self.outDisconnected
 
         self.sendLoop.dial(ip, self.port)
 
@@ -92,27 +99,27 @@ class Stargate():
         self.ipConnectedTo = None
         self.connected = False
 
-    def onDialingStart(self, ip):
+    def dialingStart(self, ip):
         self.dialFinish = False
-        self.OnDialingConnection.fire(
+        self.onDialingConnection.fire(
             self.otherSequence, self.DialSequenceFinish)
 
     def DialSequenceFinish(self):
         self.dialFinish = True
 
-    def onOutConnected(self, ip):
+    def outConnected(self, ip):
         self.ipConnectedTo = ip
         self.connected = True
-        self.OnDialingConnected.fire()
+        self.onDialingConnected.fire()
 
-    def onOutConnectionError(self):
+    def outConnectionError(self):
         self.resetConnectionInfo()
 
-    def onOutDisconnected(self):
+    def outDisconnected(self):
         self.resetConnectionInfo()
-        self.OnDialingDisconnection.fire()
+        self.onDialingDisconnection.fire()
 
-    def onIncomingConnection(self, ip):
+    def incomingConnection(self, ip):
         if(ip in self.reservedSequences.values()):
             sequence = list(self.reservedSequences.keys())[list(
                 self.reservedSequences.values()).index(ip)]
@@ -121,13 +128,48 @@ class Stargate():
             sequence = Helpers.IpToStargateCode(ip)
             sequence = Helpers.ListIntToSequence(sequence)
         self.dialFinish = False
-        self.OnIncomingConnection.fire(sequence, self.DialSequenceFinish)
+        self.onIncomingConnection.fire(sequence, self.DialSequenceFinish)
 
-    def onIncomingConnected(self, ip):
+    def incomingConnected(self, ip):
         self.connected = True
         self.ipConnectedTo = ip
-        self.OnIncomingConnected.fire()
+        self.onIncomingConnected.fire()
 
-    def onIncomingDisconnected(self):
+    def incomingDisconnected(self):
         self.resetConnectionInfo()
-        self.OnIncomingDisconnection.fire()
+        self.onIncomingDisconnection.fire()
+
+    def sendDataText(self, msg):
+        if not self.powered or not self.connected or self.sendLoop is None:
+            return
+        self.sendLoop.sendTroughGate("text.tp", msg)
+
+    def receiveDataText(self, msg):
+        self.onIncomingDataText.fire(msg)
+
+    def sendDataFile(self, fileName):
+        if not self.powered or not self.connected or self.sendLoop is None:
+            return
+        try:
+            file = open(fileName, "rb")
+            datas = file.read()
+            file.close()
+            datas = (base64.b64encode(datas)).decode('ascii')
+            fileName = os.path.basename(fileName)
+            self.sendLoop.sendTroughGate(fileName, datas)
+        except Exception as e:
+            print(e)
+            pass
+
+    def receiveDataFile(self, fileName, payload):
+        path = os.path.join(os.getcwd(), "Gate Room")
+        if not os.path.exists(path):
+            os.makedirs(path)
+        try:
+            file = open(os.path.join(path, fileName), "wb")
+            datas = base64.b64decode(payload.encode('ascii'))
+            file.write(datas)
+            file.close()
+            self.onIncomingDataFile.fire(fileName)
+        except:
+            pass

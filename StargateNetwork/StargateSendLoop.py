@@ -34,19 +34,22 @@ class StargateSendLoop (Helpers.StargateThread, Helpers.StargateSocket):
 
     def stop(self):
         self.send(Helpers.StargateCMDEnum.DISCONNECT)
-        self.socketConnected = False
-        self.socket.close()
+        super().disconnectSocket()
         super().stop()
 
     def disconnect(self):
         super().disconnectSocket()
         self.onOutDisconnected.fire()
 
+    def sendTroughGate(self, filename, content):
+        payload = filename+chr(2)+content
+        self.send(Helpers.StargateCMDEnum.DATAS, payload)
+
     def msgDialSequenceFinish(self):
         self.onOutConnected.fire(self.host)
 
-    def msgDatas(self, payload):
-        pass
-
     def msgDisconnect(self):
         self.onOutDisconnected.fire()
+
+    def msgDatas(self, payload):
+        pass

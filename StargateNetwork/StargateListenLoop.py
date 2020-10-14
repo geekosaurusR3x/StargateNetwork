@@ -49,7 +49,11 @@ class StargateListenLoop (Helpers.StargateThread, Helpers.StargateSocket):
         pass
 
     def msgDatas(self, payload):
-        pass
+        file = payload.split(chr(2))
+        if(file[0] == "text.tp"):
+            self.stargate.receiveDataText(file[1])
+        else:
+            self.stargate.receiveDataFile(file[0], file[1])
 
     def msgDisconnect(self):
         self.disconnect()
