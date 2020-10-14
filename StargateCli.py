@@ -18,6 +18,7 @@ class StargateMenu():
 
         self.stargate.onDialingDisconnection += self.closeVortexDisplay
         self.stargate.onIncomingDisconnection += self.closeVortexDisplay
+        self.stargate.onIncomingDisconnection += self.printMenu
 
         self.stargate.onIncomingDataText += self.displayReceivedText
         self.stargate.onIncomingDataFile += self.displayReceivedFile
@@ -68,26 +69,28 @@ class StargateMenu():
         print("Message received : ")
         print("\t"+msg)
 
-    def MenuLoop(self):
+    def printMenu(self):
+        if not self.stargate.connected:
+            print(stargate)
+        print("--------Menu-------")
+        if self.stargate.powered:
+            if not self.stargate.disablesend and not self.stargate.connected:
+                print("Dial")
+            if not self.stargate.disablesend and self.stargate.connected:
+                print("Send Text")
+                print("Send File")
+                print("Disconnect")
+            print("Power Off")
+        else:
+            print("Disable Listen")
+            print("Disable Call")
+            print("Power On")
+        print("Exit")
+
+    def menuLoop(self):
         choice = ""
         while choice != "Exit":
-            if not self.stargate.connected:
-                print(stargate)
-            print("--------Menu-------")
-            if self.stargate.powered:
-                if not self.stargate.disablesend and not self.stargate.connected:
-                    print("Dial")
-                if not self.stargate.disablesend and self.stargate.connected:
-                    print("Send Text")
-                    print("Send File")
-                    print("Disconnect")
-                print("Power Off")
-            else:
-                print("Disable Listen")
-                print("Disable Call")
-                print("Power On")
-            print("Exit")
-
+            self.printMenu()
             choice = input("what is your choice ? ")
             if(choice == "Disable Listen" and not self.stargate.powered):
                 self.stargate.disablelisten = True
@@ -115,17 +118,18 @@ class StargateMenu():
         stargate.powerOff()
 
     def displayDHD(self):
+        print("DHD")
         for i in range(0, 39):
             if (i % 15) == 0 and i != 0:
                 print("")
             print(f" {i}" if i < 10 else i, end=' | ')
         print("")
-        return input("Sequence to dial : ")
+        return input("Sequence to dial (dot between each symbols): ")
 
 
 if __name__ == "__main__":
     choice = ""
     stargate = Stargate()
     stargateCli = StargateMenu(stargate)
-    stargateCli.MenuLoop()
+    stargateCli.menuLoop()
     sys.exit(0)
