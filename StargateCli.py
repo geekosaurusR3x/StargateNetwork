@@ -125,7 +125,7 @@ class StargateMenu():
 
 if __name__ == "__main__":
     choice = ""
-    stargate = Stargate('', 6842)
+    stargate = Stargate()
     stargateCli = StargateMenu(stargate)
     stargateCli.MenuLoop()
     sys.exit(0)

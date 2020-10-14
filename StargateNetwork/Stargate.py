@@ -6,7 +6,7 @@ import tempfile
 
 class Stargate():
 
-    def __init__(self, host, port):
+    def __init__(self, host='', port=24801):
         self.host = host
         self.port = port
 
