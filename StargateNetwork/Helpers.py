@@ -40,7 +40,7 @@ def IpToStargateCode(ip):
     while len(ListGlyphs) < 7:
         ListGlyphs.insert(0, 0)
     ListGlyphs.pop(0)
-    ListGlyphs.append(39)
+    ListGlyphs.append(38)
     return ListGlyphs
 
 
