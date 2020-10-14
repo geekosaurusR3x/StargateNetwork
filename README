@@ -1,0 +1,25 @@
+# Readme
+
+
+
+## Requirement
+python 3
+tkinter for gui
+pyglet for gui
+
+## Install
+git clone
+
+Do not forget to redirect the port 24801 on your router
+## Using
+Run StargateCli.Py
+
+Power On for connecting to the network
+Dial for entrering an address
+
+
+## Details
+look at [wiki](https://github.com/geekosaurusR3x/StargateNetwork/wiki)
+
+## Copyright
+Font by Joy Anne Baker, 12-25-2000.
