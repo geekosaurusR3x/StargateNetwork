@@ -5,45 +5,48 @@ import time
 import io
 
 
-class StargateSendLoop (Helpers.StargateThread):
-    def __init__(self):
+class StargateSendLoop (Helpers.StargateThread, Helpers.StargateSocket):
+    def __init__(self, stargate):
         super().__init__()
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.onOutConnectionStart = EventHook.EventHook()
         self.onOutConnected = EventHook.EventHook()
         self.onOutConnectionError = EventHook.EventHook()
         self.onOutDisconnected = EventHook.EventHook()
+        self.stargate = stargate
 
     def dial(self, host, port):
         try:
-            self.socket.connect((host, port))
+            self.host = host
+            self.port = port
             self.onOutConnectionStart.fire(host)
-            self.onOutConnected.fire(host)
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((host, port))
+            self.activeConnection = self.socket
         except:
             self.onOutConnectionError.fire()
-        self.sendDatas("test")
+            return
+
+        self.socketConnected = True
+        super().start()
 
     def realRun(self):
-        try:
-            c, addr = self.socket.accept()
-        except io.BlockingIOError:
-            pass
-        except Exception as e:
-            print(e)
+        self.loopReceve()
 
     def stop(self):
-        self.sendDatas("disconnect")
+        self.send(Helpers.StargateCMDEnum.DISCONNECT)
+        self.socketConnected = False
         self.socket.close()
         super().stop()
+
+    def disconnect(self):
+        super().disconnectSocket()
         self.onOutDisconnected.fire()
 
-    def sendDatas(self, datas):
-        bufferSize = 4096
-        totalsent = 0
-        sent = bufferSize
-        datas = datas.encode()
-        while sent == bufferSize:
-            sizeToSend = min(len(datas)-totalsent, bufferSize)
-            sent = self.socket.send(datas[totalsent:totalsent+sizeToSend])
-            if sent == bufferSize:
-                totalsent += bufferSize
+    def msgDialSequenceFinish(self):
+        self.onOutConnected.fire(self.host)
+
+    def msgDatas(self, payload):
+        pass
+
+    def msgDisconnect(self):
+        self.onOutDisconnected.fire()

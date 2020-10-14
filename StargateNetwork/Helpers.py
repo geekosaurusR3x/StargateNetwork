@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 import threading
 import time
+import socket
+import io
+from enum import Enum
 
 # helpers for translate ip to stargate glyph
 
@@ -75,3 +78,96 @@ class StargateThread(ABC, threading.Thread):
     @abstractmethod
     def stop(self):
         self.loop = False
+
+# helpers for threader into stargate
+
+
+class StargateSocket(ABC):
+    def __init__(self):
+        super().__init__()
+        self.socket = None
+        self.bufferSize = 4096
+        self.activeConnection = None
+        self.socketConnected = False
+        self.host = None
+        self.port = None
+
+    def getAddress(self):
+        return socket.gethostbyname(socket.gethostname())
+
+    def loopReceve(self):
+        bytes_recd = 0
+        bufferSize = 4096
+
+        while self.socketConnected:
+            bytes_recd = bufferSize
+            chunks = []
+            while bytes_recd == bufferSize and self.socketConnected:
+                try:
+                    chunk = self.activeConnection.recv(bufferSize)
+                    bytes_recd = len(chunk)
+                    if chunk == b'':
+                        raise RuntimeError("socket connection broken")
+                    chunks.append(chunk)
+                except io.BlockingIOError:
+                    pass
+                except Exception as e:
+                    self.disconnect()
+
+            if(self.socketConnected):  # Decode only if connected
+                msg = (b''.join(chunks)).decode()
+                self.interpetCommand(msg)
+
+    @abstractmethod
+    def disconnect(self):
+        pass
+
+    def disconnectSocket(self):
+        self.socketConnected = False
+        try:
+            self.activeConnection.close()
+        except:
+            pass
+        self.activeConnection = None
+
+    def send(self, enumToSend, payload=""):
+        datas = ""+enumToSend.value+chr(1)+payload
+        self.sendDatas(datas)
+
+    def sendDatas(self, datas):
+        totalsent = 0
+        datas = datas.encode()
+        sent = self.bufferSize
+        while sent == self.bufferSize:
+            sizeToSend = min(len(datas)-totalsent, self.bufferSize)
+            sent = self.activeConnection.send(
+                datas[totalsent:totalsent+sizeToSend])
+            if sent == self.bufferSize:
+                totalsent += self.bufferSize
+
+    def interpetCommand(self, msg):
+        msg = msg.split(chr(1))
+        if msg[0] == StargateCMDEnum.DIALSEQUENCEFINISH.value:
+            self.msgDialSequenceFinish()
+        if msg[0] == StargateCMDEnum.DISCONNECT.value:
+            self.msgDisconnect()
+        if msg[0] == StargateCMDEnum.DATAS.value:
+            self.msgDatas(msg[1])
+
+    @abstractmethod
+    def msgDialSequenceFinish(self):
+        pass
+
+    @abstractmethod
+    def msgDisconnect(self):
+        pass
+
+    @abstractmethod
+    def msgDatas(self, payload):
+        pass
+
+
+class StargateCMDEnum(Enum):
+    DISCONNECT = "disconnect"
+    DIALSEQUENCEFINISH = "dialsequencefinish"
+    DATAS = "datas"

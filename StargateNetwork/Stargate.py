@@ -6,12 +6,8 @@ class Stargate():
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.listenloop = StargateListenLoop.StargateListenLoop(
-            self.host, self.port, self)
 
-        self.listenloop.onIncomingConnection += self.onIncomingConnection
-        self.listenloop.onIncomingConnected += self.onIncomingConnected
-        self.listenloop.onIncomingDisconnected += self.onIncomingDisconnected
+        self.listenloop = None
         self.sendLoop = None
         self.powered = False
         self.connected = False
@@ -20,7 +16,7 @@ class Stargate():
         self.disablesend = False
 
         self.reservedSequences = {
-            "39.39.39.39.39.39.39": "127.0.0.1"
+            "38.38.38.38.38.38.38": "127.0.0.1"
         }
 
         self.OnDialingConnection = EventHook.EventHook()
@@ -30,17 +26,22 @@ class Stargate():
         self.OnIncomingConnected = EventHook.EventHook()
         self.OnIncomingDisconnection = EventHook.EventHook()
         self.otherSequence = None
+        self.dialFinish = False
 
     def __str__(self):
-        return f"Stargate { self.getAdressOnNetwork() if self.powered else None} \r\n\t Power state : {self.powered}\r\n\t Connection status : {self.connected} to {self.ipConnectedTo} \r\n\t Can Call : {not self.disablesend}\r\n\t Can Receve : {not self.disablelisten}"
+        return f"Stargate { self.getAdressOnNetwork() if self.powered and not self.disablelisten else None} \r\n\t Power state : {self.powered}\r\n\t Connection status : {self.connected} to {self.ipConnectedTo} \r\n\t Can Call : {not self.disablesend}\r\n\t Can Receve : {not self.disablelisten}"
 
     def powerOn(self):
         if(self.powered):
             return
-
         self.powered = True
         if not self.disablelisten:
             print('Start listening for incoming traveler')
+            self.listenloop = StargateListenLoop.StargateListenLoop(
+                self.host, self.port, self)
+            self.listenloop.onIncomingConnection += self.onIncomingConnection
+            self.listenloop.onIncomingConnected += self.onIncomingConnected
+            self.listenloop.onIncomingDisconnected += self.onIncomingDisconnected
             self.listenloop.configureConnection()
             self.listenloop.start()
 
@@ -48,11 +49,11 @@ class Stargate():
         if not self.powered:
             return
         if not self.disablelisten:
-            print('Stop listening for incoming traveler')
             self.listenloop.stop()
         self.powered = False
 
     def getAdressOnNetwork(self):
+
         Ip = self.listenloop.getAddress()
         Ip = Helpers.SequenceToListInt(Ip)
         return Helpers.IpToStargateCode(Ip)
@@ -71,7 +72,7 @@ class Stargate():
             ip = Helpers.ListIntToSequence(ip)
 
         # creating the connection
-        self.sendLoop = StargateSendLoop.StargateSendLoop()
+        self.sendLoop = StargateSendLoop.StargateSendLoop(self)
         self.sendLoop.onOutConnectionStart += self.onDialingStart
         self.sendLoop.onOutConnected += self.onOutConnected
         self.sendLoop.onOutConnectionError += self.onOutConnectionError
@@ -92,26 +93,26 @@ class Stargate():
         self.connected = False
 
     def onDialingStart(self, ip):
-        print(f"Connecting to {ip}")
-        self.OnDialingConnection.fire(self.otherSequence)
+        self.dialFinish = False
+        self.OnDialingConnection.fire(
+            self.otherSequence, self.DialSequenceFinish)
+
+    def DialSequenceFinish(self):
+        self.dialFinish = True
 
     def onOutConnected(self, ip):
         self.ipConnectedTo = ip
         self.connected = True
-        print(f"Connected to {self.ipConnectedTo}")
         self.OnDialingConnected.fire()
 
     def onOutConnectionError(self):
-        print(f"Connection to {self.ipConnectedTo} failled")
         self.resetConnectionInfo()
 
     def onOutDisconnected(self):
-        print(f"Disconnected to {self.ipConnectedTo}")
         self.resetConnectionInfo()
         self.OnDialingDisconnection.fire()
 
     def onIncomingConnection(self, ip):
-        print(f"Connection from {ip}")
         if(ip in self.reservedSequences.values()):
             sequence = list(self.reservedSequences.keys())[list(
                 self.reservedSequences.values()).index(ip)]
@@ -119,16 +120,14 @@ class Stargate():
             ip = Helpers.SequenceToListInt(ip)
             sequence = Helpers.IpToStargateCode(ip)
             sequence = Helpers.ListIntToSequence(sequence)
-
-        self.OnIncomingConnection.fire(sequence)
+        self.dialFinish = False
+        self.OnIncomingConnection.fire(sequence, self.DialSequenceFinish)
 
     def onIncomingConnected(self, ip):
         self.connected = True
         self.ipConnectedTo = ip
-        print(f"Connected from {self.ipConnectedTo}")
         self.OnIncomingConnected.fire()
 
     def onIncomingDisconnected(self):
-        print(f"Disconnected from {self.ipConnectedTo}")
         self.resetConnectionInfo()
         self.OnIncomingDisconnection.fire()

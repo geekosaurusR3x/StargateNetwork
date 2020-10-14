@@ -4,22 +4,19 @@ import time
 import io
 
 
-class StargateListenLoop (Helpers.StargateThread):
+class StargateListenLoop (Helpers.StargateThread, Helpers.StargateSocket):
     def __init__(self, host, port, stargate):
         super().__init__()
         self.host = host
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.onIncomingConnection = EventHook.EventHook()
         self.onIncomingConnected = EventHook.EventHook()
         self.onIncomingDisconnected = EventHook.EventHook()
-        self.activeConnection = None
         self.stargate = stargate
-        self.connected = False
 
     def configureConnection(self):
-
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind((self.host, self.port))
         self.socket.listen(1)
         self.socket.setblocking(0)
@@ -29,55 +26,30 @@ class StargateListenLoop (Helpers.StargateThread):
             self.activeConnection, addr = self.socket.accept()
             self.onIncomingConnection.fire(addr[0])
             self.activeConnection.setblocking(0)
-            self.connected = True
+            while not self.stargate.dialFinish:
+                time.sleep(0.001)
+            self.socketConnected = True
+            self.send(Helpers.StargateCMDEnum.DIALSEQUENCEFINISH)
             self.onIncomingConnected.fire(addr[0])
             self.loopReceve()
         except io.BlockingIOError:
             pass
-        except Exception as e:
-            print(e)
+        except:
+            self.disconnect()
 
     def stop(self):
         super().stop()
+        self.disconnect()
 
-    def loopReceve(self):
-        bytes_recd = 0
-        bufferSize = 4096
+    def disconnect(self):
+        super().disconnectSocket()
+        self.onIncomingDisconnected.fire()
 
-        while self.connected:
-            bytes_recd = bufferSize
-            chunks = []
-            while bytes_recd == bufferSize:
-                try:
-                    chunk = self.activeConnection.recv(bufferSize)
-                    bytes_recd = len(chunk)
-                    if chunk == b'':
-                        raise RuntimeError("socket connection broken")
-                    chunks.append(chunk)
-                except io.BlockingIOError:
-                    pass
-                except Exception as e:
-                    print(e)
+    def msgDialSequenceFinish(self):
+        pass
 
-            msg = (b''.join(chunks)).decode()
-            self.interpetCommand(msg)
+    def msgDatas(self, payload):
+        pass
 
-    def interpetCommand(self, msg):
-        if msg == "disconnect":
-            self.connected = False
-            self.activeConnection.close()
-            self.onIncomingConnected.fire()
-
-    def sendDatas(self, datas):
-        bufferSize = 4096
-        totalsent = 0
-        sent = bufferSize
-        while sent == bufferSize:
-            sizeToSend = min(len(datas)-totalsent, bufferSize)
-            sent = self.activeConnection.send(
-                datas[totalsent:totalsent+sizeToSend])
-            if sent == bufferSize:
-                totalsent += bufferSize
-
-    def getAddress(self):
-        return socket.gethostbyname(socket.gethostname())
+    def msgDisconnect(self):
+        self.disconnect()
