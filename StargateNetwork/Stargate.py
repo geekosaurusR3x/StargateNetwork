@@ -2,6 +2,8 @@ from . import StargateListenLoop, StargateSendLoop, Helpers, EventHook
 import base64
 import os
 import tempfile
+import time
+from _thread import start_new_thread
 
 
 class Stargate():
@@ -12,6 +14,7 @@ class Stargate():
 
         self.listenloop = None
         self.sendLoop = None
+        self.TimerLoop = None
         self.powered = False
         self.connected = False
         self.ipConnectedTo = None
@@ -111,6 +114,7 @@ class Stargate():
         self.ipConnectedTo = ip
         self.connected = True
         self.onDialingConnected.fire()
+        start_new_thread(self.timerClose)
 
     def outConnectionError(self):
         self.resetConnectionInfo()
@@ -173,3 +177,11 @@ class Stargate():
             self.onIncomingDataFile.fire(fileName)
         except:
             pass
+
+    def timerClose(self):
+        delay = 2280  # (38*60 seconds)
+        startTime = time.time()
+        while startTime + delay > time.time() and self.connected:
+            time.sleep(1)
+        if(self.connected):
+            self.disconnect()
