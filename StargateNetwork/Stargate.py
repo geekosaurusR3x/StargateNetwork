@@ -114,7 +114,7 @@ class Stargate():
         self.ipConnectedTo = ip
         self.connected = True
         self.onDialingConnected.fire()
-        start_new_thread(self.timerClose)
+        start_new_thread(self.timerClose, ())
 
     def outConnectionError(self):
         self.resetConnectionInfo()
