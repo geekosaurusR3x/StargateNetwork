@@ -1,4 +1,4 @@
-from StargateNetwork.Stargate import Stargate
+from stargate_network.stargate import Stargate
 from _thread import start_new_thread
 import time
 import sys
