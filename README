@@ -1,25 +1,37 @@
 # Readme
 
-
-
 ## Requirement
+
 python 3
 tkinter for gui
 pyglet for gui
 
 ## Install
+
 git clone
 
 Do not forget to redirect the port 24801 on your router
+
 ## Using
+
+### Using Cli
+
 Run StargateCli.Py
 
 Power On for connecting to the network
 Dial for entrering an address
 
+### Implementing your own Stargate Front End
 
+- import stargate from stargate_network
+- Instanciate stargate
+- Bind callback to stargate events
+
+More details into stargate cli
 ## Details
+
 look at [wiki](https://github.com/geekosaurusR3x/StargateNetwork/wiki)
 
 ## Copyright
+
 Font by Joy Anne Baker, 12-25-2000.
