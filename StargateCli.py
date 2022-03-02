@@ -1,4 +1,4 @@
-from stargate_network.stargate import Stargate
+from StargateNetwork.stargate_network.stargate_network import StargateNetwork
 from _thread import start_new_thread
 import time
 import sys
@@ -39,8 +39,7 @@ class StargateMenu():
         index = 1
         for i in sequence.split('.'):
             if index == 7 and dial:
-                startTime = time.time()
-                while startTime + timeout > time.time() and not self.stargate.connected:  # wait 3 second or stargate connected
+                while not self.stargate.connected:
                     time.sleep(0.0001)
                 if not self.stargate.connected:
                     print("Not Locked")
@@ -49,7 +48,7 @@ class StargateMenu():
             else:
                 print(i, end=" ")
             index += 1
-            time.sleep(0.5)
+            time.sleep(2)
         print("")
         callback()
 

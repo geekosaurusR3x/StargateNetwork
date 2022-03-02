@@ -10,7 +10,7 @@ from .helpers import *
 from .event_hook import EventHook
 
 
-class Stargate():
+class StargateNetwork():
     """Class for representing a stargate on internet
 
         Must be powered on before sending of receiving call
