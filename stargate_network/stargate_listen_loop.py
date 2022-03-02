@@ -40,7 +40,8 @@ class StargateListenLoop (StargateThread, StargateSocket):
             self.loopReceve()
         except io.BlockingIOError:
             pass
-        except:
+        except Exception as e:
+            print(e)
             self.disconnect()
 
     def stop(self) -> NoReturn:
