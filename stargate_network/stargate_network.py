@@ -89,15 +89,18 @@ class StargateNetwork():
             self.__sendLoop = None
         self.powered = False
 
-    def getAddressOnNetwork(self) -> List[int]:
+    def getAddressOnNetwork(self) -> List[List[int]]:
         """Return the int sequence for this gate over the network
 
         Returns:
             List[int]: The stargate sequence
         """
-        Ip = self.__listenloop.getAddress()
-        Ip = SequenceToListInt(Ip)
-        return IpToStargateCode(Ip)
+        d = dict()
+        IpLan = self.__listenloop.getLocalAddress()
+        d["LAN"] = IpToStargateCode(SequenceToListInt(IpLan))
+        IpWan = self.__listenloop.getExternalAdress()
+        d["WAN"]= IpToStargateCode(SequenceToListInt(IpWan))
+        return d
 
     def dial(self, sequence: str) -> NoReturn:
         """Dial sequence.

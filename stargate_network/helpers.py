@@ -7,6 +7,7 @@ import threading
 import time
 import socket
 import io
+import requests
 from enum import Enum
 from typing import List, Type, NoReturn
 
@@ -183,7 +184,7 @@ class StargateSocket(ABC):
         self.port = None
 
 
-    def getAddress(self) -> str:
+    def getLocalAddress(self) -> str:
         """Retrun the public ip address
 
         Returns:
@@ -200,6 +201,10 @@ class StargateSocket(ABC):
         finally:
             s.close()
         return IP
+
+    def getExternalAdress(self) -> str:
+        myip = requests.get('https://www.wikipedia.org').headers['X-Client-IP']
+        return myip
 
     def loopReceve(self) -> NoReturn:
         """Loop for receiving socket data without blocking
