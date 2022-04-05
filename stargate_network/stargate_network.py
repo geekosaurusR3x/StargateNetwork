@@ -111,6 +111,7 @@ class StargateNetwork():
 
         # seach it in reserved sequences
         self.otherSequence = sequence
+        print(sequence)
         if(sequence in self.reservedSequences):
             ip = self.reservedSequences[sequence]
         else:
@@ -173,6 +174,7 @@ class StargateNetwork():
         """When out fail to connect
 
         """
+        print("out connection error")
         self.__resetConnectionInfo()
 
     def outDisconnected(self) -> NoReturn:
